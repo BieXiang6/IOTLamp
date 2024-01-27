@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "axios": "^1.6.2",
+    "diagnostics_channel": "^1.1.0",
+    "mqtt": "^5.3.1",
+    "paho-mqtt": "^1.1.0",
+    "vue": "^3.3.9",
+    "vue-router": "^4.2.5",
+    "vuex": "^4.1.0",
+    "websocket-extensions": "^0.1.4"
+  }
+}

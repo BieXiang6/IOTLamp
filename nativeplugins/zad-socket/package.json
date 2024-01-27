@@ -1,0 +1,25 @@
+{
+	"name": "zad-socket",
+	"id": "zad-socket",
+	"version": "1.0.0",
+	"description": "TCP和MQTT",
+	"_dp_type": "nativeplugin",
+	"_dp_nativeplugin": {
+		"android": {
+			"hooksClass": "",
+			"plugins": [{
+					"type": "module",
+					"name": "zad-socket-tcp",
+					"class": "com.zchar.uniapp.plugin.TcpModule"
+				},
+				{
+					"type": "module",
+					"name": "zad-socket-mqtt",
+					"class": "com.zchar.uniapp.plugin.MqttModule"
+				}
+			],
+			"integrateType": "aar",
+			"abis": []
+		}
+	}
+}
