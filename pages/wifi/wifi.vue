@@ -9,6 +9,7 @@
 </template>
 
 <script>
+
 const _TCPSocket = uni.requireNativePlugin("zad-socket-tcp");
 const _MQTT = uni.requireNativePlugin("zad-socket-mqtt");
 export default {
@@ -58,25 +59,46 @@ export default {
 	handleMessage(e)
 	{
 		if (e.method == 'receive') {
+			let tempStr = e.data;
 
-		    if (e.data.startsWith("success"))
+		    if (tempStr.startsWith("success"))
 			{
-				let temp = e.data.split('|');
-				axios.get("http://" + this.serverIP + ":" + this.serverPort+'/add_device?account='
-				+ this.account + '&device_num=' + temp[1] + '&device_name=' + temp[2] + '&device_model='
-				+ temp[3] + '&token=' + this.token)
-				  .then(response => {
-				    // 处理登录成功的逻辑
+				let temp = tempStr.split('|');
+				setTimeout(()=>{
+					uni.request({
+						url:"http://" + this.serverIP + ":" + this.serverPort + '/add_device',
+						data: {
+								account: this.account,
+								device_num: temp[1],
+								device_name: temp[2],
+								device_model: temp[3],
+								token: this.token
+						},
+						success:(response)=>{
 							if (!response.data.startsWith('error'))
 								uni.showToast({
 									title:"新设备添加完成。"
 								});
 							else
-								alert(response.data);
-				})
-				.catch(error => {
-						  
-				});
+								uni.showModal({
+									title:"错误",
+									content:response.data
+								});
+						},
+						fail: (error)=>{
+							uni.setStorage({
+								key: "newDevices",
+								data: tempStr,
+								success: ()=>{
+									uni.showModal({
+										title: "通知",
+										content: "新设备添加完成，请重启app。"
+									})
+								}
+							})
+						}
+					});
+				},3000);
 				
 			}
 		}

@@ -1,231 +1,192 @@
 <template>
+	<view class="content">
 
-
-
-	<view class="">
-		<div>
-			<img :style="{ filter: 'brightness(' + currentValue + '%)' }" src="static/light.png" alt="Your Image"
-				style="position: absolute;left: 22%;width: 200px;height: auto;top: 0px;">
-			<div class="slider-container">
-				<div class="slider" :style="{ width: sliderWidth + 'px' }" ref="slider" @touchstart="onTouchStart"
-					@touchmove="onTouchMove" @touchend="onTouchEnd">
-					<div class="knob" :style="{ left: knobPosition + 'px' }"></div>
+		<div class="dev_inf">
+			<text class="Aponym">{{device_inf.sAponym}}</text>
+			<text class="nAponym">{{device_inf.sDeviceNum}}</text>
+			<text class="nAponym">{{device_inf.sModel}}</text>
+		</div>
+		<div class="dev_state">
+			<svg width="0" height="0" style="position:absolute;z-index:-1;">
+			    <defs>
+			        <filter id="colorize">
+						<feColorMatrix type="matrix"
+							v-bind:values="lighti" />
+			        </filter>
+			    </defs>
+			</svg>
+			<div class="sun">
+				<image src="../../static/light2.png" mode="widthFix" class="light"></image>
+				<text class="nit">1111</text>
+			</div>
+			<div class="temp">
+				<div class="dev_tip">
+					<text>温湿度</text>
+					<text>5℃/50%</text>
 				</div>
-				<div class="value-display">
-					<span>Value: {{ currentValue }}</span>
-					<span>Min: {{ minValue }}</span>
-					<span>Max: {{ maxValue }}</span>
+				<div class="dev_tip">
+					<text>案前当前</text>
+					<text>{{isPerson}}</text>
+				</div>
+				<div class="dev_tip">
+					<text>案前目前</text>
 				</div>
 			</div>
 		</div>
-		<img :src="getImageSource()" alt="开关图片显示错误" @click="toggleImage();" class="img" />
-<!-- <button @click="publishtoesp()">hh</button> -->
-		<div style="display: flex;flex-direction: column;position: absolute;left: 10%;top: 40%;">
-			<div style="font-size: 30px;margin-bottom: 10px;">
-				<img src="static/tem.png" alt="" class="one" />
-				<span>当前环境温度：<span>{{tem}}</span></span>
+		<div class="dev_con">
+			<div class="dev_con_i">
+				<text style="width: 15%;">亮度:</text>
+				<slider class="lightslider"
+					v-bind:value="lightValue"
+					background-color="#000000"
+					activeColor="rgb(179, 157, 219)"
+					block-color="rgb(24, 255, 255)"
+					block-size="20"></slider>
 			</div>
-			<div style="font-size: 30px;">
-				<img src="static/wet.png" alt="" class="one" />
-				<span>当前环境湿度：<span>{{wet}}</span></span>
+			<div class="dev_con_i">
+				<text style="width: 15%;">色调:</text>
+				<slider class="lightslider"
+					v-bind:value="lightStyle"
+					background-color="rgb(255, 198, 107)"
+					activeColor="#FFFFEE"
+					block-color="rgb(255, 198, 107)"
+					block-size="20"></slider>
+			</div>
+			<div class="dev_con_i">
+				<button>关灯</button>
 			</div>
 		</div>
+
 	</view>
 </template>
 
 <script>
-	import "../new_file.js"
-	import vue from "vue"
-	import router from "vue-router"
 	export default {
 		data() {
 			return {
-				isDragging: false,
-				startX: 0,
-				knobPosition: 0,
-				sliderWidth: 200,
-				minValue: 0,
-				maxValue: 100,
-				a:0,
-				
-				humun:0,
-				esp:0,
-				currentValue: 0,
-				tem: 0,
-				wet: 0,
-				client: null,
-				// page: 0,
-				subscription: {
-					qos: 0,
+				device_inf:{
+					sDeviceNum: "testnum",
+					sAponym: "我的台灯",
+					sModel: "000"
 				},
-				publish: {
-					topic: "topic/",
-					// topic: "topic/hh",
-					qos: 0,
-					payload: '{ "msg": "Hello, I am browser." }',
-				},
-				connection: {
-					timeout: 60,
-					userName: "mqttfx",
-					password: "123456",
-					// willMessage: Paho.MQTT.Message,
-					keepAliveInterval: 60,
-					cleanSession: true,
-					useSSL: false,
-					mqttVersion:4,
-					onSuccess:()=> {
-						alert("Connected to MQTT broker");
-
-						this.subscribephone()
-						this.publishtoesp()
-						// 测试了一下显示不能连接，
-						// if (this.client.connected) {
-						// 	alert("发布")
-						//     this.publishtoesp();
-						// 	alert("订阅")
-						// 	this.subscribephone()
-						//   } else {
-						// 	alert("MQTT客户端未连接");
-						//   }
-						},
-				},
+				lighti:"5 0 0 0 0\n0 8 0 0 0\n0 0 4 0 0\n0 0 0 1 0",
+				lightValue:55,
+				lightStyle:45,
+				isPerson:"无人"
 			};
 		},
-		onLoad: function (option) { //option为object类型，会序列化上个页面传递的参数
-				this.esp=option.id
-				// alert(this.esp)//打印出上个页面传递的参数。
-			},
-		mounted() {
-			// 创建 MQTT 客户端实例
-			this.client = new Paho.MQTT.Client("ws://47.101.42.39:8083/mqtt", "aaaa", );
-			// 设置连接回调
-			this.client.onConnectionLost = this.onConnectionLost;
-			this.client.onMessageArrived = this.onMessageArrived;
-			// 连接到 MQTT 代理
-			this.client.connect(this.connection);
+		onLoad() {
+			
 		},
 		methods: {
-			onTouchStart(event) {
-				this.isDragging = true;
-				this.startX = event.touches[0].clientX - this.knobPosition;
-			},
-			onTouchMove(event) {
-				if (this.isDragging) {
-					const newX = event.touches[0].clientX - this.startX;
-					const maxX = this.sliderWidth - 20;
-					this.knobPosition = Math.max(0, Math.min(newX, maxX));
-
-					// 根据拖动块位置计算当前值
-					this.currentValue = Math.round((this.knobPosition / maxX) * (this.maxValue - this.minValue) + this
-						.minValue);
-				}
-			},
-			
-			//控制开关的三个函数
-			onTouchEnd() {
-				this.isDragging = false;
-			},
-			toggleImage() {
-				this.a = 1 - this.a; // Toggle between 0 and 1
-			},
-			getImageSource() {
-				return this.a == 1 ? 'static/img1.png' : 'static/img.png';
-			},
-			
-			
-			// onConnect() {
-			// 	alert("Connected to MQTT broker");
-			// 	if (this.client.connected) {
-			// 		// alert("发布")
-			// 		//    this.publishtoesp();
-			// 	 alert('连接')
-			// 	 this.subscribephone()
-			// 	  } else {
-			// 	    alert("MQTT客户端未连接");
-			// 	  }
-			// },
-			onConnectionLost(responseObject) {
-				if (responseObject.errorCode !== 0) {
-					console.log("Connection lost:", responseObject.errorMessage);
-				}
-			},
-			onMessageArrived(message) {
-				console.log("Message arrived:", message.payloadString);
-				this.a1 = JSON.parse(message.payloadString)
-				alert(this.a1.msg)
-				this.wet=a1.wet
-				this.tem=a1.tem
-				this.humen=a1.humen
-				this.currentValue=a1.currentValue
-				this.a=a1.a
-			},
-			publishtoesp() {
-				alert("进行发布");
-				this.publish.payload=JSON.stringify({
-					wet:this.wet,
-					tem:this.tem,
-					humen:this.humen,
-					currentValue:this.currentValue,
-					a:this.a//开关
-				})
-				this.publish.topic=this.publish.topic+this.esp
-				alert(this.publish.topic)
-				alert(this.publish.payload)
-				this.client.send(this.publish.topic+this.esp, this.publish.payload, this.publish.qos, true)
-			},
-			subscribephone(){
-				alert("订阅")
-				alert(getApp().globalData.phone)
-				alert("topic/"+getApp().globalData.phone)
-				this.client.subscribe("topic/"+getApp().globalData.phone);
-			}
+	
 		},
 	};
 </script>
 
 <style>
-	/* 样式可以根据您的需求自行调整 */
-	.slider-container {
-		position: absolute;
-		top: 30%;
-		left: 22%;
-	}
+	
+	.content {
+		height: 93.33vh;
+		width: 100vw;
+		background: linear-gradient(110.6deg, rgb(179, 157, 219) 7%, rgb(150, 159, 222) 47.7%, rgb(24, 255, 255) 100.6%);
 
-	.slider {
-		margin-top: 10px;
-		position: relative;
-		height: 20px;
-		background-color: #ccc;
-		border-radius: 10px;
-		overflow: hidden;
-	}
-
-	.knob {
-		position: absolute;
-		top: 0;
-		width: 20px;
-		height: 20px;
-		background-color: #ff0000;
-		border-radius: 50%;
-		cursor: pointer;
-	}
-
-	.value-display {
 		display: flex;
-		justify-content: space-between;
-		margin-top: 10px;
+		flex-direction: column;
 	}
+	.dev_inf {
+		margin-top: 25rpx;
+		width: 88%;
+		height: 40px;
+		display: flex;
+		justify-content: left;
+		align-items: center;
+		flex-direction: row;
+		margin-left: 6%;
+	}
+	.dev_con {
+		margin-top: 25rpx;
+		width: 88%;
+		height: 350rpx;
+		
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		background-color: #FFFFFFE6;
+		flex-direction: column;
+		margin-left: 6%;
+		border-radius: 25rpx;
+		box-shadow: 0px 0rpx 50rpx 5rpx #F2F2F2;
+	}
+	
+	.dev_state {
+		margin-top: 25rpx;
+		width: 88%;
+		margin-left: 6%;
+		height: 700rpx;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+	.light {
+		z-index: 1;
+		position: relative;
+		
+		max-width: 80%;
+		filter: url(#colorize);
+	}
+	.sun {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+	.nit {
+		position: absolute;
+		z-index: 2;
+		font-size: 50rpx;
+		font-weight: 800;
+	}
+	.temp {
+		width: 100%;
+		height: 150rpx;
+		display: flex;
+		flex-direction: row;
+		text-align: center;
+		justify-content: space-around;
+	}
+	.dev_tip {
+		width: 30%;
+		height: 150rpx;
+		
+		display: flex;
+		justify-content: center;
+		background-color: #FFFFFFE6;
+		flex-direction: column;
+		border-radius: 25rpx;
+		box-shadow: 0px 0rpx 50rpx 5rpx #F2F2F2;
+	}
+	.lightslider {
+		width: 85%;
+	}
+	.dev_con_i {
+		flex-direction: row;
+		display: flex;
+		width: 90%;
+	}
+	
+	.Aponym {
 
-	.img {
-		position: fixed;
-		bottom: 10%;
-		left: 25%;
-		width: 50%;
-		height: auto;
+		font-size: 40rpx;
+		color: black;
+		text-align: left;
+		font-weight: bold;
 	}
-
-	.one {
-		width: 40px;
-		height: auto;
+	.nAponym {
+		margin-left: 4%;
+		margin-block-start: 15rpx;
+		font-size: 25rpx;
+		color: dimgray;
+		text-align: left;
 	}
+	
 </style>

@@ -1,41 +1,30 @@
 
 <template>
-  <view style="background-color: #f5f5f5;">
-    <div class="hh" style="position: fixed;top: 6.6%; width: 100%;background-color: #fff;">
-      <div style="display: flex; flex-direction: row; height: 50px; font-size: 30px; margin-bottom: 10px;">
-        <text style="line-height: 50px;">我的家</text>
-        <button class="add" @click="jumptowifi">添加设备</button>
-      </div>
-    </div>
-    <div ref="list" style="width: 100%; height: 600px; margin-top: 65px;">
-      <!-- 其他内容 -->
-    </div>
+  <view class="all">
+		  <div class="title_choose">
+		      <text style="font-size: 40rpx;color: black;text-align: left;font-weight: bold;">我的设备</text>
+		      <button class="add" @click="jumptowifi">添加设备</button>
+		  </div>
+		  <uni-list class="list_choose" style="background-color: #FFFFFF00;margin-top: 25rpx;">
+		  	<uni-list-item v-for="i in devices" :key="i.hh" style="background-color: #FFFFFF00;">
+		  		<template slot="header">
+		  		<biexiang-device v-bind:param="i"></biexiang-device>
+		  		</template>
+		  	</uni-list-item>
+		  </uni-list>
+	
   </view>
 </template>
 
 <script>
-import Vue from 'vue';
-import axios from 'axios';
-import router from 'vue-router';
 export default {
   data() {
     return {
-      deviceStyle: {
-        width: '95%',
-        height: '80px',
-        fontSize: '30px',
-        backgroundColor: '#ffffff',
-        textAlign: 'center',
-        // paddingTop: '20px',
-		marginLeft:'2.5%',
-        marginBottom: '2%',
-		borderRadius:'5px',
-      },
 	  token:'null',
 	  account:'null',
 	  ip:'127.0.0.1',
 	  port:8500,
-	  devices:0
+	  devices:[{sAponym:"测试台灯",sDeviceNum:"testDevice32",nAponym:"032"}]
     };
   },
   onLoad() {
@@ -43,17 +32,17 @@ export default {
 	  this.account = getApp().globalData.account;
 	  this.port = getApp().globalData.port;
 	  this.ip = getApp().globalData.ip;
-	  axios.get("http://" + this.ip + ":" + this.port + '/obtain_device?account='+this.account)
-	    .then(response => {
-	  		this.devices = response.data;
-			let len = this.devices.length;
-			for (let i=0;i<len;i++){
-				this.createDynamicElement(this.devices[i],i);
-			}
-	    })
-	    .catch(error => {
-	      // 处理登录失败的逻辑
-	    });
+	  uni.request({
+	  	url:"http://" + this.ip + ":" + this.port + '/obtain_device?',
+		data:{
+			account: this.account,
+			token: this.token
+		},
+		success:(res)=>{
+				this.devices = res.data;
+
+		}
+	  });
   },
   methods: {
     jumptowifi(){
@@ -62,28 +51,7 @@ export default {
     		url:'/pages/wifi/wifi',
     	})
     },
-	createDynamicElement(esp,i) {
-	    const dynamicComponent = Vue.extend({
-	      render: (h) => h('div', { class: 'device' }, [
-	        h('button', {
-	          attrs: { id: esp.sDeviceNum },
-	          style: this.deviceStyle,
-	          on: { click: () => this.navigateToBrightness(i) },
-	        }, esp.sAponym),
-	      ]),
-	    });
-	    const dynamicInstance = new dynamicComponent().$mount();
-	    this.$nextTick(() => {
-	      this.$refs.list.appendChild(dynamicInstance.$el);
-	    });
-	  },
-	   navigateToBrightness(i){
-	        const listItemID = this.devices[i];
-	        uni.navigateTo({
-	          url: `/pages/brightness/brightness?id=${listItemID}`,
-	        });
-	      },
-    }, 
+	}
 };
 </script>
 <style>
@@ -93,7 +61,27 @@ export default {
 		border-radius: 10px;
 /* 		font-size: 20px; */
 		margin-right: 0;	
-	},
+	}
+	
+	.title_choose {
+		margin-top: 25rpx;
+		width: 88%;
+		height: 40px;
+		display: flex;
+		justify-content: left;
+		align-items: center;
+		flex-direction: row;
+		margin-left: 6%;
+		
+
+	}
+	
+	.list_choose {
+		width: 100%;
+		height:100%;
+		background-color:#FFFFFFF;
+	}
+	
 	.device{
 		width: 90%;
 		height: 80px;
@@ -104,5 +92,12 @@ export default {
 		textAlign: center;
 		marginBottom: 2px;
 		border-radius: 10%;
+	}
+	.all {
+		background: linear-gradient(110.6deg, rgb(179, 157, 219) 7%, rgb(150, 159, 222) 47.7%, rgb(24, 255, 255) 100.6%);
+		height: 93.33vh;
+		width: 100vw;
+		display: flex;
+		flex-direction: column;
 	}
 </style>

@@ -14,7 +14,6 @@
 </template>
 
 <script>
-import axios from 'axios'
 
 export default {
 
@@ -38,37 +37,70 @@ export default {
       const serverPort = 8500;
 		getApp().globalData.ip = serverIP;
 		getApp().globalData.port = serverPort;
-      // 发送登录请求
-      axios.get("http://" + serverIP+":"+serverPort+'/logind?account='+this.username+'&password='+this.password)
-        .then(response => {
-          // 处理登录成功的逻辑
-			if (!response.data.startsWith('error'))
-				this.jumptoChoosedevice(response.data);
-			else
-				alert(response.data);
-    
-          // 在这里处理获取的数据，可以将其保存到组件的数据属性中，例如：
-          // this.userData = response.data;
-        })
-        .catch(error => {
-          // 处理登录失败的逻辑
-		  uni.showModal({
-			  title:"ee",
-			  content:error.data
-		  });
-        });
-    },
-	jumptoChoosedevice(token){
-		// this.login();
-		uni.navigateTo({
-			url:'/pages/choosedevice/choosedevice',
-			success: (res) => {
-			          // res.eventChannel.emit('acceptDataFromsignPage', { phone:this.username });
-					getApp().globalData.account = this.username;
-					getApp().globalData.token = token;
-					alert('phone:'+getApp().globalData.account);
-					},
+		uni.request({
+			url:"http://" + serverIP+":"+serverPort+'/logind',
+			data:{
+				account:this.username,
+				password:this.password
+			},
+			success: (res)=>{
+			        if (!res.data.startsWith('error'))
+					{
+						getApp().globalData.account = this.username;
+						getApp().globalData.token = res.data;
+						this.jumptoChoosedevice();
+					}
+					else
+					{
+						uni.showModal({
+							   title:"错误",
+							   content:res.errMsg
+						  });
+					}
+			    },
+			fail:(error)=>{
+				uni.showModal({
+					   title:"错误",
+					   content:error.data
+				  });
+			}
 		})
+
+    },
+	jumptoChoosedevice(){
+		
+		uni.getStorage({
+			key: "newDevices",
+			success: (res) => {
+				let temp = res.data.split('|');
+				uni.request({
+					url:"http://" + this.serverIP + ":" + this.serverPort + '/add_device',
+					data: {
+							account: this.account,
+							device_num: temp[1],
+							device_name: temp[2],
+							device_model: temp[3],
+							token: this.token
+					},
+					complete:()=>{
+						uni.removeStorage({
+							key: "newDevices"
+						});
+						uni.navigateTo({
+							url:'/pages/choosedevice/choosedevice'
+						});
+					}
+					
+				});
+				
+			},
+			fail: () => {
+				uni.navigateTo({
+					url:'/pages/choosedevice/choosedevice'
+				});
+			}
+		});
+		
 	}
   },
 };

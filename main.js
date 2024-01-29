@@ -5,6 +5,7 @@ import Vue from 'vue'
 import './uni.promisify.adaptor'
 Vue.config.productionTip = false
 App.mpType = 'app'
+
 const app = new Vue({
   ...App
 })
@@ -13,6 +14,7 @@ app.$mount()
 
 // #ifdef VUE3
 import { createSSRApp } from 'vue'
+import biexiangDeviceVueHtml from './uni_modules/biexiang-device/components/biexiang-device/biexiang-device.vue.html'
 export function createApp() {
   const app = createSSRApp(App)
   return {
