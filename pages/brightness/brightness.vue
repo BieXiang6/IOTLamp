@@ -3,6 +3,8 @@
 
 		<div class="dev_inf">
 			<text class="Aponym">{{device_inf.sAponym}}</text>
+			<image src="../../static/change.png" mode="heightFix"
+			style="height: 40rpx" @click="changeAponym"></image>
 			<text class="nAponym">{{device_inf.sDeviceNum}}</text>
 			<text class="nAponym">{{device_inf.sModel}}</text>
 		</div>
@@ -61,6 +63,7 @@
 </template>
 
 <script>
+const _MQTT = uni.requireNativePlugin("zad-socket-mqtt");
 	export default {
 		data() {
 			return {
@@ -72,22 +75,101 @@
 				lighti:"5 0 0 0 0\n0 8 0 0 0\n0 0 4 0 0\n0 0 0 1 0",
 				lightValue:55,
 				lightStyle:45,
-				isPerson:"无人"
+				isPerson:"无人",
 			};
 		},
 		onLoad() {
-			
+			this.device_inf = getApp().globalData.onDevice;
+			_MQTT.event({ method: 'isConnected' }, e => {
+                if (e.data == false)
+				{
+					_MQTT.event({
+					    method: 'connect',
+					    param: {
+							url: 'tcp://' + getApp().globalData.ip + ':' + getApp().globalData.mqttPort,
+							username: getApp().globalData.account,
+					        password: getApp().globalData.password,
+					        clientId: getApp().globalData.account
+					    }
+					}, e => {
+					    this.handleMessage(e);
+						_MQTT.event({ method: 'subscribe', param: { topic: 'IOTLamp/slave/' + this.device_inf.sDeviceNum + '/#' } })
+					});
+				}
+            });
+			// this.mqtt.event({
+			// 		method: 'connect',
+			// 		param: {
+			// 			url: 'tcp://192.168.10.21:1883',
+			// 			username: 'admin',
+			// 			password: 'public',
+			// 			clientId: 'abcd123'
+			// 		}
+			// 	}, e => {
+   //              this.handleMessage(e)
+   //          });
 		},
 		methods: {
+			changeAponym()
+			{
+				uni.showModal({
+					   title:"修改设备名",
+					   editable: true,
+					   placeholderText: "新名字",
+					   success: (res)=>{
+						   if (res.confirm) {
+								if (res.content == "")
+								{
+									uni.showModal({
+										   title:"失败",
+										   content:"您没有设置名字！"
+									  });
+								}
+									
+								uni.request({
+									url:"http://" + getApp().globalData.ip + ":" + getApp().globalData.port + '/change_device',
+							   		data:{
+							   			account: getApp().globalData.account,
+							   			token: getApp().globalData.token,
+							   			device_num: this.device_inf.sDeviceNum,
+										aponym: res.content
+							   		},
+							   		success:(res)=>{
+							   			if(!res.data.startsWith("error"))
+							   			{
+							   				uni.showModal({
+							   					   title:"成功",
+							   					   content:"设备名已经成功修改！"
+							   				  });
+							   			}
+							   			else
+							   			{
+							   				uni.showModal({
+							   					   title:"失败",
+							   					   content:res.data
+							   				  });
+							   			}
+							   
+							   		}
+							   });
+						   }
+					   }
+					   
+				  });
+			}
 	
-		},
+			},
+			handleMessage(e)
+			{
+				
+			}
 	};
 </script>
 
 <style>
 	
 	.content {
-		height: 93.33vh;
+		height: 100vh;
 		width: 100vw;
 		background: linear-gradient(110.6deg, rgb(179, 157, 219) 7%, rgb(150, 159, 222) 47.7%, rgb(24, 255, 255) 100.6%);
 

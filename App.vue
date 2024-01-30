@@ -4,7 +4,7 @@
 
 					phone:"as",
 					esp:['hh','jj'],
-		        },  
+		        },
 		onLaunch: function() {
 			console.log('App Launch')
 		},

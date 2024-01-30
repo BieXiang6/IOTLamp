@@ -35,8 +35,10 @@ export default {
       // 替换成你的服务器IP和端口
       const serverIP = '47.101.42.39';
       const serverPort = 8500;
+	  const mqttPort = 1883;
 		getApp().globalData.ip = serverIP;
 		getApp().globalData.port = serverPort;
+		getApp().globalData.mqttPort = mqttPort;
 		uni.request({
 			url:"http://" + serverIP+":"+serverPort+'/logind',
 			data:{
@@ -47,6 +49,7 @@ export default {
 			        if (!res.data.startsWith('error'))
 					{
 						getApp().globalData.account = this.username;
+						getApp().globalData.password = this.password;
 						getApp().globalData.token = res.data;
 						this.jumptoChoosedevice();
 					}

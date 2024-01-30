@@ -11,7 +11,6 @@
 <script>
 
 const _TCPSocket = uni.requireNativePlugin("zad-socket-tcp");
-const _MQTT = uni.requireNativePlugin("zad-socket-mqtt");
 export default {
   onLoad() {
 		this.serverIP = getApp().globalData.ip;

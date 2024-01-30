@@ -6,9 +6,9 @@
 		      <button class="add" @click="jumptowifi">添加设备</button>
 		  </div>
 		  <uni-list class="list_choose" style="background-color: #FFFFFF00;margin-top: 25rpx;">
-		  	<uni-list-item v-for="i in devices" :key="i.hh" style="background-color: #FFFFFF00;">
+		  	<uni-list-item v-for="i in devices" :key="i.sDeviceNum" style="background-color: #FFFFFF00;">
 		  		<template slot="header">
-		  		<biexiang-device v-bind:param="i"></biexiang-device>
+					<biexiang-device v-bind:param="i" class="device"></biexiang-device>
 		  		</template>
 		  	</uni-list-item>
 		  </uni-list>
@@ -17,40 +17,40 @@
 </template>
 
 <script>
-export default {
-  data() {
-    return {
-	  token:'null',
-	  account:'null',
-	  ip:'127.0.0.1',
-	  port:8500,
-	  devices:[{sAponym:"测试台灯",sDeviceNum:"testDevice32",nAponym:"032"}]
-    };
-  },
-  onLoad() {
-	  this.token = getApp().globalData.token;
-	  this.account = getApp().globalData.account;
-	  this.port = getApp().globalData.port;
-	  this.ip = getApp().globalData.ip;
-	  uni.request({
-	  	url:"http://" + this.ip + ":" + this.port + '/obtain_device?',
-		data:{
-			account: this.account,
-			token: this.token
-		},
-		success:(res)=>{
-				this.devices = res.data;
 
-		}
-	  });
-  },
-  methods: {
-    jumptowifi(){
+export default {
+	data() {
+		return {
+		token:'null',
+		account:'null',
+		ip:'127.0.0.1',
+		port:8500,
+		devices:[{sAponym:"测试台灯",sDeviceNum:"testDevice32",nAponym:"032"}]
+	};
+	},
+	onLoad() {
+		this.token = getApp().globalData.token;
+		this.account = getApp().globalData.account;
+		this.port = getApp().globalData.port;
+		this.ip = getApp().globalData.ip;
+		uni.request({
+			url:"http://" + this.ip + ":" + this.port + '/obtain_device?',
+			data:{
+				account: this.account,
+				token: this.token
+			},
+			success:(res)=>{
+				this.devices = res.data;
+			}
+		});
+	},
+	methods: {
+		jumptowifi(){
     	// this.login();
-    	uni.navigateTo({
-    		url:'/pages/wifi/wifi',
-    	})
-    },
+			uni.navigateTo({
+				url:'/pages/wifi/wifi',
+			});
+		},
 	}
 };
 </script>
@@ -83,19 +83,15 @@ export default {
 	}
 	
 	.device{
-		width: 90%;
-		height: 80px;
-		fontSize: 30px;
-		margin: auto;
-		background-color: azure;
-		border: 1px solid black;
-		textAlign: center;
-		marginBottom: 2px;
-		border-radius: 10%;
+		width: 750rpx;
+		height: 120rpx;
+		display: flex;
+		flex-direction: row;
+		justify-content: start;
+		align-items: center;
 	}
 	.all {
-		background: linear-gradient(110.6deg, rgb(179, 157, 219) 7%, rgb(150, 159, 222) 47.7%, rgb(24, 255, 255) 100.6%);
-		height: 93.33vh;
+		height: 100vh;
 		width: 100vw;
 		display: flex;
 		flex-direction: column;
