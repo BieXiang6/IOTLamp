@@ -4,6 +4,9 @@
 
 					phone:"as",
 					esp:['hh','jj'],
+					ip:"47.101.42.39",
+					mqttPort: 8083,
+					port: 8500
 		        },
 		onLaunch: function() {
 			console.log('App Launch')

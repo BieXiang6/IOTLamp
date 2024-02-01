@@ -61,9 +61,9 @@
 
 	</view>
 </template>
-
 <script>
-const _MQTT = uni.requireNativePlugin("zad-socket-mqtt");
+var app = getApp();
+
 	export default {
 		data() {
 			return {
@@ -76,40 +76,34 @@ const _MQTT = uni.requireNativePlugin("zad-socket-mqtt");
 				lightValue:55,
 				lightStyle:45,
 				isPerson:"无人",
+				topic_root: "IOTLamp/slave/",
+				phone_topic: "IOTLamp/master/",
 			};
 		},
 		onLoad() {
 			this.device_inf = getApp().globalData.onDevice;
-			_MQTT.event({ method: 'isConnected' }, e => {
-                if (e.data == false)
-				{
-					_MQTT.event({
-					    method: 'connect',
-					    param: {
-							url: 'tcp://' + getApp().globalData.ip + ':' + getApp().globalData.mqttPort,
-							username: getApp().globalData.account,
-					        password: getApp().globalData.password,
-					        clientId: getApp().globalData.account
-					    }
-					}, e => {
-					    this.handleMessage(e);
-						_MQTT.event({ method: 'subscribe', param: { topic: 'IOTLamp/slave/' + this.device_inf.sDeviceNum + '/#' } })
-					});
-				}
-            });
-			// this.mqtt.event({
-			// 		method: 'connect',
-			// 		param: {
-			// 			url: 'tcp://192.168.10.21:1883',
-			// 			username: 'admin',
-			// 			password: 'public',
-			// 			clientId: 'abcd123'
-			// 		}
-			// 	}, e => {
-   //              this.handleMessage(e)
-   //          });
+			this.phone_topic = "IOTLamp/master/" + getApp().globalData.account  + '/';
+			this.topic_root = 'IOTLamp/slave/' + this.device_inf.sDeviceNum + '/';
+			this.created();
+		},
+		beforeDestroy(){
+			app.globalData.client.unsubscribe(this.topic_root + '#');
 		},
 		methods: {
+			onConnectedLost : function(responseObject){  
+			      console.log("onConnectionLost:"+responseObject.errorMessage);
+			    },
+			onMessageArrived : function (message) {
+			      console.log("onMessageArrived:"+message.payloadString);
+			    },
+			onDestroyFunction: function (message) {
+				
+			},
+			created: function() {
+				app.globalData.client.subscribe(this.topic_root + '#');
+				app.globalData.client.onConnectedLost = this.onConnectedLost;
+				app.globalData.client.onMessageArrived = this.onMessageArrived;
+			},
 			changeAponym()
 			{
 				uni.showModal({
@@ -117,7 +111,7 @@ const _MQTT = uni.requireNativePlugin("zad-socket-mqtt");
 					   editable: true,
 					   placeholderText: "新名字",
 					   success: (res)=>{
-						   if (res.confirm) {
+							if (res.confirm) {
 								if (res.content == "")
 								{
 									uni.showModal({
@@ -151,19 +145,14 @@ const _MQTT = uni.requireNativePlugin("zad-socket-mqtt");
 							   			}
 							   
 							   		}
-							   });
-						   }
-					   }
+								});
+							}
+						}
 					   
 				  });
 			}
-	
-			},
-			handleMessage(e)
-			{
-				
-			}
-	};
+		}
+}
 </script>
 
 <style>

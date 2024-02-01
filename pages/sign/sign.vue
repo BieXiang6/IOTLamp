@@ -14,7 +14,8 @@
 </template>
 
 <script>
-
+export const MQTT = require('@/utils/paho-mqtt.js');
+var app = getApp();
 export default {
 
   data() {
@@ -33,14 +34,10 @@ export default {
   methods: {
     login() {
       // 替换成你的服务器IP和端口
-      const serverIP = '47.101.42.39';
-      const serverPort = 8500;
-	  const mqttPort = 1883;
-		getApp().globalData.ip = serverIP;
-		getApp().globalData.port = serverPort;
-		getApp().globalData.mqttPort = mqttPort;
+		var serverIP = app.globalData.ip;
+		var serverPort = app.globalData.port;
 		uni.request({
-			url:"http://" + serverIP+":"+serverPort+'/logind',
+			url:"http://" + serverIP + ":" + serverPort + '/logind',
 			data:{
 				account:this.username,
 				password:this.password
@@ -48,9 +45,15 @@ export default {
 			success: (res)=>{
 			        if (!res.data.startsWith('error'))
 					{
-						getApp().globalData.account = this.username;
-						getApp().globalData.password = this.password;
-						getApp().globalData.token = res.data;
+						app.globalData.account = this.username;
+						app.globalData.password = this.password;
+						app.globalData.token = res.data;
+						app.globalData.client = new MQTT.Client(app.globalData.ip, app.globalData.mqttPort, "/mqtt", app.globalData.account);
+						app.globalData.client.connect({
+							userName: app.globalData.account,
+							password: app.globalData.password,
+						});
+						
 						this.jumptoChoosedevice();
 					}
 					else

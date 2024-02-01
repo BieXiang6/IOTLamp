@@ -24,14 +24,6 @@
 			}
 		},
 		{
-			"path" : "pages/mqtt/mqtt",
-			"style" : 
-			{
-				"navigationBarTitleText" : "",
-				"enablePullDownRefresh" : false
-			}
-		},
-		{
 			"path" : "pages/choosedevice/choosedevice",
 			"style" : 
 			{
