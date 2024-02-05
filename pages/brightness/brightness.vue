@@ -9,29 +9,22 @@
 			<text class="nAponym">{{device_inf.sModel}}</text>
 		</div>
 		<div class="dev_state">
-			<svg width="0" height="0" style="position:absolute;z-index:-1;">
-			    <defs>
-			        <filter id="colorize">
-						<feColorMatrix type="matrix"
-							v-bind:values="lighti" />
-			        </filter>
-			    </defs>
-			</svg>
 			<div class="sun">
-				<image src="../../static/light2.png" mode="widthFix" class="light"></image>
-				<text class="nit">1111</text>
+				<img src='../../static/light2.png' v-bind:style="sunStyle">
+				<text class="nit">{{actLig}}</text>
 			</div>
 			<div class="temp">
 				<div class="dev_tip">
 					<text>温湿度</text>
-					<text>5℃/50%</text>
+					<text style="font-size: 30rpx;">{{tempr}}</text>
 				</div>
 				<div class="dev_tip">
 					<text>案前当前</text>
 					<text>{{isPerson}}</text>
 				</div>
 				<div class="dev_tip">
-					<text>案前目前</text>
+					<text>环境亮度</text>
+					<text>{{lig}}</text>
 				</div>
 			</div>
 		</div>
@@ -43,7 +36,9 @@
 					background-color="#000000"
 					activeColor="rgb(179, 157, 219)"
 					block-color="rgb(24, 255, 255)"
-					block-size="20"></slider>
+					block-size="20"
+					@changing="ligChanging"
+					@change="confirmColor"></slider>
 			</div>
 			<div class="dev_con_i">
 				<text style="width: 15%;">色调:</text>
@@ -52,16 +47,19 @@
 					background-color="rgb(255, 198, 107)"
 					activeColor="#FFFFEE"
 					block-color="rgb(255, 198, 107)"
-					block-size="20"></slider>
+					block-size="20"
+					@changing="colorChanging"
+					@change="confirmColor"></slider>
 			</div>
 			<div class="dev_con_i">
-				<button>关灯</button>
+				<button @click="openLight">关灯</button>
 			</div>
 		</div>
 
 	</view>
 </template>
 <script>
+import {kelvinToRGB, changeLightValue} from "@/utils/Kelvin-to-RGB.js";
 var app = getApp();
 
 	export default {
@@ -72,12 +70,20 @@ var app = getApp();
 					sAponym: "我的台灯",
 					sModel: "000"
 				},
+				sunStyle:"position: relative;left: -750rpx;filter: drop-shadow(#ffea04 750rpx 0) blur(1rpx);",
 				lighti:"5 0 0 0 0\n0 8 0 0 0\n0 0 4 0 0\n0 0 0 1 0",
 				lightValue:55,
 				lightStyle:45,
-				isPerson:"无人",
+				actLig:0,
+				isPerson:"设备离线",
+				tempr:"设备离线",
+				isOpen:false,
+				lig:1000,
+				colorMax:"#FFFFFF",
+				colorFact:"#ffea04",
 				topic_root: "IOTLamp/slave/",
 				phone_topic: "IOTLamp/master/",
+				tempInterval: null
 			};
 		},
 		onLoad() {
@@ -87,22 +93,76 @@ var app = getApp();
 			this.created();
 		},
 		beforeDestroy(){
+			clearInterval(this.tempInterval);
 			app.globalData.client.unsubscribe(this.topic_root + '#');
 		},
 		methods: {
+			ligChanging(e)
+			{
+				this.colorFact = changeLightValue(this.colorMax, e.detail.value - 100);
+				this.sunStyle = "position: relative;left: -750rpx;filter: drop-shadow(" + this.colorFact + " 750rpx 0) blur(1rpx);";
+			},
+			colorChanging(e)
+			{
+				var value = e.detail.value;
+				var res = 2500 + value * 55;
+				this.colorMax = kelvinToRGB(res);
+				this.colorFact = changeLightValue(this.colorMax, this.lightValue - 100);
+				this.sunStyle = "position: relative;left: -750rpx;filter: drop-shadow(" + this.colorFact + " 750rpx 0) blur(1rpx);";
+			},
+			confirmColor()
+			{
+				app.globalData.client.send(this.phone_topic + 'request', 'lig:' + this.colorFact, 0, false);
+				console.log(this.colorFact);
+			},
 			onConnectedLost : function(responseObject){  
 			      console.log("onConnectionLost:"+responseObject.errorMessage);
-			    },
+			},
 			onMessageArrived : function (message) {
-			      console.log("onMessageArrived:"+message.payloadString);
-			    },
+					
+					var lastIndex = message.destinationName.lastIndexOf("/")
+					var target = message.destinationName.substring(lastIndex + 1);
+					if (target == 'DHT')
+					{
+						this.tempr = message.payloadString.replace(',', '℃/') + '%';
+					}
+					else if (target == 'SR')
+					{
+						if (message.payloadString == '0')
+							this.isPerson = "无　人";
+						else
+							this.isPerson = "有　人";
+					}
+					else if (target == 'LIG')
+					{
+						this.lig = message.payloadString;
+					}
+
+			},
 			onDestroyFunction: function (message) {
 				
 			},
 			created: function() {
-				app.globalData.client.subscribe(this.topic_root + '#');
 				app.globalData.client.onConnectedLost = this.onConnectedLost;
 				app.globalData.client.onMessageArrived = this.onMessageArrived;
+				app.globalData.client.subscribe(this.topic_root + '#', {
+					qos: 0,
+					onSuccess: ()=>{
+						app.globalData.client.send(this.phone_topic + 'request', 'all', 0, false);
+						this.tempInterval = setInterval(()=>{
+							app.globalData.client.send(this.phone_topic + 'request', 'all', 0, false);
+						}, 10000);
+
+					}
+				});
+			},
+			openLight()
+			{
+				if (!this.isOpen)
+					app.globalData.client.send(this.phone_topic + 'request', 'lig:#FFFFFF', 0, false);
+				else
+					app.globalData.client.send(this.phone_topic + 'request', 'lig:#000000', 0, false);
+				this.isOpen = !this.isOpen;
 			},
 			changeAponym()
 			{
@@ -189,6 +249,7 @@ var app = getApp();
 		border-radius: 25rpx;
 		box-shadow: 0px 0rpx 50rpx 5rpx #F2F2F2;
 	}
+
 	
 	.dev_state {
 		margin-top: 25rpx;
@@ -199,17 +260,12 @@ var app = getApp();
 		flex-direction: column;
 		align-items: center;
 	}
-	.light {
-		z-index: 1;
-		position: relative;
-		
-		max-width: 80%;
-		filter: url(#colorize);
-	}
 	.sun {
 		display: flex;
 		justify-content: center;
 		align-items: center;
+		width: 100%;
+		height: 700rpx;
 	}
 	.nit {
 		position: absolute;
